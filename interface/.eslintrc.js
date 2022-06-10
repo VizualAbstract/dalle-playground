@@ -20,9 +20,14 @@ module.exports = {
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       },
     },
+<<<<<<< Updated upstream
     react: {
       version: 'detect',
     },
+=======
+    'import/internal-regex':
+      '^components/|^utils/|^actions/|^assets/|^core/|^api/|^reducers/|^types/|^contexts/',
+>>>>>>> Stashed changes
   },
   parser: '@typescript-eslint/parser',
   parserOptions: {
