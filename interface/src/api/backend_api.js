@@ -6,7 +6,7 @@ export async function callDalleService(backendUrl, text, numImages) {
   const queryStartTime = new Date();
   const response = await Promise.race([
     (
-      await fetch(`${backendUrl}/dalle`, {
+      await fetch(backendUrl + `/dalle`, {
         method: 'POST',
         headers: {
           'Bypass-Tunnel-Reminder': 'go',
@@ -20,7 +20,6 @@ export async function callDalleService(backendUrl, text, numImages) {
         if (!resp.ok) {
           throw Error(resp.statusText);
         }
-
         return resp;
       })
     ).text(),
@@ -33,17 +32,10 @@ export async function callDalleService(backendUrl, text, numImages) {
   };
 }
 
-export async function checkIfValidBackend(backendUrl) {
-  return await fetch(backendUrl, {
+export const validateDalleServer = (backendUrl) =>
+  fetch(backendUrl, {
     headers: {
       'Bypass-Tunnel-Reminder': 'go',
       mode: 'no-cors',
     },
-  })
-    .then(() => {
-      return true;
-    })
-    .catch(() => {
-      return false;
-    });
-}
+  });

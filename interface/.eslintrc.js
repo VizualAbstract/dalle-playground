@@ -24,7 +24,7 @@ module.exports = {
       },
     },
     'import/internal-regex':
-      '^components/|^utils/|^actions/|^assets/|^core/|^api/|^reducers/|^types/',
+      '^components/|^utils/|^actions/|^assets/|^core/|^api/|^reducers/|^types/|^contexts/',
   },
   parser: '@typescript-eslint/parser',
   parserOptions: {

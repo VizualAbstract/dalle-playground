@@ -1,197 +1,188 @@
-import React, { FC, useState } from 'react';
+import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useQuery } from 'react-query';
 
 import {
+  Button,
   Card,
+  CardActions,
   CardContent,
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
+  Container,
+  Grid,
   Typography,
-  createStyles,
 } from '@material-ui/core';
-import withStyles, { WithStyles } from '@material-ui/core/styles/withStyles';
 
 import { callDalleService } from 'api/backend_api';
 import BackendUrlInput from 'components/BackendUrlInput';
 import GeneratedImageList from 'components/GeneratedImageList';
+import Header from 'components/Header';
+import ImagesPerQuerySelect from 'components/ImagesPerQuerySelect';
 import LoadingSpinner from 'components/LoadingSpinner';
 import TextPromptInput from 'components/TextPromptInput';
+import MyFormContext from 'contexts/FormHandling';
 
-const useStyles = () =>
-  createStyles({
-    root: {
-      display: 'flex',
-      width: '100%',
-      flexDirection: 'column',
-      margin: '60px 0px 60px 0px',
-      alignItems: 'center',
-      textAlign: 'center',
-    },
-    title: {
-      marginBottom: '20px',
-    },
-    playgroundSection: {
-      display: 'flex',
-      flex: 1,
-      width: '100%',
-      alignItems: 'flex-start',
-      justifyContent: 'center',
-      marginTop: '20px',
-    },
-    settingsSection: {
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '1em',
-      maxWidth: '300px',
-    },
-    searchQueryCard: {
-      marginBottom: '20px',
-    },
-    imagesPerQueryControl: {
-      marginTop: '20px',
-    },
-    formControl: {
-      margin: '20px',
-      minWidth: 120,
-    },
-    gallery: {
-      display: 'flex',
-      flex: '1',
-      maxWidth: '50%',
-      height: '100%',
-      justifyContent: 'center',
-      alignItems: 'flex-start',
-      padding: '1rem',
-    },
-  });
+const getDalle = async ({ url, query, limit }) => {
+  const { generatedImgs } = await callDalleService(url, query, limit);
+  return generatedImgs;
+};
 
-type Props = WithStyles<typeof useStyles>;
+const App = () => {
+  const { backendURL, queryString, validatedBackendURL, isValidURL, imagesPerQuery } =
+    useContext(MyFormContext);
 
-const App: FC<Props> = ({ classes }) => {
-  const [backendUrl, setBackendUrl] = useState('');
+  const { data, isLoading, isSuccess, refetch } = useQuery(
+    ['DALLE', backendURL, queryString, imagesPerQuery],
+    () => getDalle({ url: backendURL, query: queryString, limit: imagesPerQuery }),
+  );
+
+  // useEffect(() => {
+  //   refetch();
+  // }, [refetch, backendURL, queryString, imagesPerQuery]);
+
+  // window.console.log('data', data, 'isLoading', isLoading, 'isSuccess', isSuccess);
+
   const [isFetchingImgs, setIsFetchingImgs] = useState(false);
-  const [isCheckingBackendEndpoint, setIsCheckingBackendEndpoint] = useState(false);
-  const [isValidBackendEndpoint, setIsValidBackendEndpoint] = useState(true);
-  const [generatedImages, setGeneratedImages] = useState([]);
   const [apiError, setApiError] = useState('');
-  const [imagesPerQuery, setImagesPerQuery] = useState(2);
+  const [generatedImages, setGeneratedImages] = useState([]);
   const [queryTime, setQueryTime] = useState(0);
 
-  const imagesPerQueryOptions = 10;
-  const validBackendUrl = isValidBackendEndpoint && backendUrl;
+  const isDisabled = isFetchingImgs || !imagesPerQuery || !isValidURL || !queryString;
 
-  function enterPressedCallback(promptText: string) {
-    window.console.log(`API call to DALL-E web service with the following prompt [${promptText}]`);
-    setApiError('');
-    setIsFetchingImgs(true);
-    callDalleService(backendUrl, promptText, imagesPerQuery)
-      .then((response: any) => {
-        setQueryTime(response.executionTime);
-        setGeneratedImages(response.generatedImgs);
-        setIsFetchingImgs(false);
-      })
-      .catch((error: any) => {
-        window.console.log('Error querying DALL-E service.', error);
+  const timer = useRef();
 
-        if (error.message === 'Timeout') {
-          setApiError(
-            'Timeout querying DALL-E service (>1min). Consider reducing the images per query or use a stronger backend.',
-          );
-        } else {
-          setApiError('Error querying DALL-E service. Check your backend server logs.');
-        }
+  const runTimer = useCallback(() => {
+    let time = 0;
+    timer.current = setInterval(() => {
+      time = time + 100 / 1000;
+      setQueryTime(time.toFixed(2));
+    }, 100);
+  }, [timer, setQueryTime]);
 
-        setIsFetchingImgs(false);
-      });
-  }
+  const stopTimer = useCallback(
+    (finalTime = 0) => {
+      clearInterval(timer.current);
+      setQueryTime(finalTime);
+    },
+    [timer, setQueryTime],
+  );
 
-  function getGalleryContent() {
-    if (apiError) {
-      return (
-        <Typography variant="h5" color="error">
-          {apiError}
-        </Typography>
-      );
-    }
+  const handleDalleResponse = useCallback(
+    (response) => {
+      // Stop timer
+      stopTimer(response['executionTime']);
+      // Display results
+      setGeneratedImages(response['generatedImgs']);
+      // Set UI state
+      setIsFetchingImgs(false);
+    },
+    [stopTimer, setGeneratedImages, setIsFetchingImgs],
+  );
 
-    if (isFetchingImgs) {
-      return <LoadingSpinner isLoading={isFetchingImgs} />;
-    }
+  const handleDalleError = useCallback(
+    (error) => {
+      console.log('Error querying DALL-E service.', error);
+      if (error.message === 'Timeout') {
+        setApiError(
+          'Timeout querying DALL-E service (>1min). Consider reducing the images per query or use a stronger backend.',
+        );
+      } else {
+        setApiError('Error querying DALL-E service. Check your backend server logs.');
+      }
+      setIsFetchingImgs(false);
+      stopTimer();
+    },
+    [setApiError, setIsFetchingImgs, stopTimer],
+  );
 
-    return <GeneratedImageList generatedImages={generatedImages} />;
-  }
+  const handleOnEnter = useCallback(() => {
+    refetch();
+    // runTimer();
+    // setApiError('');
+    // setIsFetchingImgs(true);
+
+    // // Perform request
+    // callDalleService(backendURL, queryString, imagesPerQuery)
+    //   .then(handleDalleResponse)
+    //   .catch(handleDalleError);
+  }, [
+    refetch,
+    // runTimer,
+    // setApiError,
+    // backendURL,
+    // handleDalleResponse,
+    // handleDalleError,
+    // imagesPerQuery,
+    // setIsFetchingImgs,
+    // queryString,
+  ]);
+
+  const showResults = generatedImages.length > 0 || apiError || isFetchingImgs;
+  const showGallery = !apiError && !isFetchingImgs;
 
   return (
-    <div className={classes.root}>
-      <div className={classes.title}>
-        <Typography variant="h3">
-          DALL-E Playground{' '}
-          <span role="img" aria-label="sparks-emoji">
-            ✨
-          </span>
-        </Typography>
-      </div>
-
-      {!validBackendUrl && (
-        <div>
-          <Typography variant="body1" color="textSecondary">
-            Put your DALL-E backend URL to start
-          </Typography>
-        </div>
-      )}
-
-      <div className={classes.playgroundSection}>
-        <div className={classes.settingsSection}>
-          <Card className={classes.searchQueryCard}>
+    <Container>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Header />
+        </Grid>
+        {!validatedBackendURL && (
+          <Grid item xs={12}>
+            <Typography variant="body1" color="textSecondary">
+              Put your DALL-E backend URL to start
+            </Typography>
+          </Grid>
+        )}
+        <Grid item xs={4}>
+          <Card>
             <CardContent>
-              <BackendUrlInput
-                setBackendValidUrl={setBackendUrl}
-                isValidBackendEndpoint={isValidBackendEndpoint}
-                setIsValidBackendEndpoint={setIsValidBackendEndpoint}
-                setIsCheckingBackendEndpoint={setIsCheckingBackendEndpoint}
-                isCheckingBackendEndpoint={isCheckingBackendEndpoint}
-                disabled={isFetchingImgs}
-              />
+              <BackendUrlInput isDisabled={isFetchingImgs} />
               <TextPromptInput
-                enterPressedCallback={enterPressedCallback}
-                disabled={isFetchingImgs || !validBackendUrl}
+                onEnter={handleOnEnter}
+                disabled={isFetchingImgs || !validatedBackendURL}
               />
-
-              <FormControl className={classes.imagesPerQueryControl} variant="outlined">
-                <InputLabel id="images-per-query-label">Images to generate</InputLabel>
-                <Select
-                  labelId="images-per-query-label"
-                  label="Images per query"
-                  value={imagesPerQuery}
-                  disabled={isFetchingImgs}
-                  onChange={(event) => setImagesPerQuery(parseInt(event.target.value as string))}
-                >
-                  {Array.from(Array(imagesPerQueryOptions).keys()).map((num) => {
-                    return (
-                      <MenuItem key={num + 1} value={num + 1}>
-                        {num + 1}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-                <FormHelperText>More images = slower query</FormHelperText>
-              </FormControl>
+              <ImagesPerQuerySelect isDisabled={isFetchingImgs} />
             </CardContent>
+            <CardActions>
+              <Button
+                variant="contained"
+                onClick={handleOnEnter}
+                disabled={isDisabled}
+                color="primary"
+                fullWidth
+              >
+                Submit
+              </Button>
+            </CardActions>
           </Card>
           {queryTime !== 0 && (
-            <Typography variant="body2" color="textSecondary">
+            <Typography variant="body2" color="textSecondary" align="center">
               Query execution time: {queryTime} sec
             </Typography>
           )}
-        </div>
-        {(generatedImages.length > 0 || apiError || isFetchingImgs) && (
-          <div className={classes.gallery}>{getGalleryContent()}</div>
+        </Grid>
+        {!isLoading && !!data.length && <GeneratedImageList generatedImages={data} />}
+        {showResults && (
+          <Grid item xs={8} align="center">
+            {showGallery && (
+              <Typography variant="body1" color="textPrimary">
+                Results for: "{queryString}"
+              </Typography>
+            )}
+            {!!apiError && (
+              <Typography variant="h5" color="error">
+                {apiError}
+              </Typography>
+            )}
+            {isFetchingImgs && (
+              <LoadingSpinner searchTerm={queryString} isLoading={isFetchingImgs} />
+            )}
+            {showGallery && <GeneratedImageList generatedImages={generatedImages} />}
+          </Grid>
         )}
-      </div>
-    </div>
+      </Grid>
+    </Container>
   );
 };
 
-export default withStyles(useStyles)(App);
+App.displayName = 'App';
+
+export default memo(App);
