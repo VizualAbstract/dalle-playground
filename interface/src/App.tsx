@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useContext, useRef, useState } from 'react';
+import React, { memo, useCallback, useContext, useState } from 'react';
 import { useQuery } from 'react-query';
 
 import {
@@ -17,6 +17,7 @@ import ImagesPerQuerySelect from 'components/Form/ImagesPerQuerySelect';
 import GeneratedImageList from 'components/GeneratedImageList';
 import Header from 'components/Layout/Header';
 import LoadingSpinner from 'components/LoadingSpinner';
+import QueryTimer from 'components/QueryTimer';
 import TextPromptInput from 'components/TextPromptInput';
 import { FormContext } from 'contexts/FormContext';
 
@@ -25,84 +26,76 @@ const getDalle = async ({ url, query, limit }) => {
   return generatedImgs;
 };
 
-const useTimer = (initialTime = 0) => {
-  const [queryTime, setQueryTime] = useState(initialTime);
-
-  const timer = useRef(null);
-
-  const startTimer = useCallback(() => {
-    let time = 0;
-    timer.current = setInterval(() => {
-      time = time + 100 / 1000;
-      setQueryTime(parseInt(time.toFixed(2)));
-    }, 100);
-  }, [timer, setQueryTime]);
-
-  const stopTimer = useCallback(
-    (finalTime = 0) => {
-      clearInterval(timer.current);
-      setQueryTime(finalTime);
-    },
-    [timer, setQueryTime],
-  );
-
-  return {
-    startTimer,
-    stopTimer,
-    currentTime: queryTime,
-  };
-};
-
 const App = () => {
   const { backendURL, queryString, validatedBackendURL, isValidURL, imagesPerQuery } =
     useContext(FormContext);
 
-  const { startTimer, stopTimer, currentTime: queryTime } = useTimer();
+  // Query Timer
+  const [enableTimer, setEnableTimer] = useState(false);
+  const [queryTime, setQueryTime] = useState(0);
 
-  const { data, isLoading, isSuccess, refetch, isError } = useQuery(
-    ['DALLE', backendURL, queryString, imagesPerQuery],
-    () => {
-      startTimer();
-      setApiError('');
-      setIsFetchingImgs(true);
-      return getDalle({
-        url: backendURL,
-        query: queryString,
-        limit: imagesPerQuery,
-      });
-    },
-    {
-      onSettled: () => {
-        stopTimer();
-      },
-      onSuccess: (response: any) => {
-        // Stop timer
-        stopTimer(response['executionTime']);
-        // Display results
-        setGeneratedImages(response['generatedImgs']);
-        // Set UI state
-        setIsFetchingImgs(false);
-      },
-      onError: (error: any) => {
-        window.console.log('Error querying DALL-E service.', error);
-        if (error.message === 'Timeout') {
-          setApiError(
-            'Timeout querying DALL-E service (>1min). Consider reducing the images per query or use a stronger backend.',
-          );
-        } else {
-          setApiError('Error querying DALL-E service. Check your backend server logs.');
-        }
-        setIsFetchingImgs(false);
-        stopTimer();
-      },
-    },
-  );
-
-  const [isFetchingImgs, setIsFetchingImgs] = useState(false);
+  // Query results
+  const [enableQuery, setEnableQuery] = useState(false);
   const [apiError, setApiError] = useState('');
   const [generatedImages, setGeneratedImages] = useState([]);
 
-  const handleOnEnter = useCallback(() => refetch(), [refetch]);
+  const getImages = useCallback(() => {
+    setEnableTimer(true);
+    setApiError('');
+    return getDalle({
+      url: backendURL,
+      query: queryString,
+      limit: imagesPerQuery,
+    });
+  }, [backendURL, queryString, imagesPerQuery]);
+
+  const onSettled = useCallback(() => {
+    setEnableTimer(false);
+    setEnableQuery(false);
+  }, []);
+
+  const onSuccess = useCallback((response) => {
+    if (response.ok) {
+      // Set final execution time
+      setQueryTime(response['executionTime']);
+      // Display results
+      setGeneratedImages(response['generatedImgs']);
+    }
+  }, []);
+
+  const onError = useCallback(
+    (error: any) => {
+      setQueryTime(0);
+
+      window.console.log('Error querying DALL-E service.', error);
+
+      if (error.message === 'Timeout') {
+        setApiError(
+          'Timeout querying DALL-E service (>1min). Consider reducing the images per query or use a stronger backend.',
+        );
+      } else {
+        setApiError('Error querying DALL-E service. Check your backend server logs.');
+      }
+    },
+    [setQueryTime, setApiError],
+  );
+
+  const { isLoading, isSuccess, refetch, isError } = useQuery(
+    ['DALLE', backendURL, queryString, imagesPerQuery],
+    () => getImages,
+    {
+      enabled: enableQuery,
+      retry: false,
+      onSettled: onSettled,
+      onSuccess: onSuccess,
+      onError: onError,
+    },
+  );
+
+  const handleOnEnter = useCallback(() => {
+    setEnableQuery(true);
+    refetch();
+  }, [refetch]);
 
   const disableBackendURL = isLoading;
   const disableQueryString = disableBackendURL || !isValidURL;
@@ -147,16 +140,11 @@ const App = () => {
               </Button>
             </CardActions>
           </Card>
-          {queryTime !== 0 && (
-            <Typography variant="body2" color="textSecondary" align="center">
-              Query execution time: {queryTime} sec
-            </Typography>
-          )}
+          <QueryTimer runTimer={enableTimer} time={queryTime} />
         </Grid>
-        {!isLoading && !!data.length && <GeneratedImageList generatedImages={data} />}
-        {showResults && (
+        {showGallery && (
           <Grid item xs={8}>
-            {showGallery && (
+            {showResults && (
               <Typography variant="body1" color="textPrimary">
                 Results for: &lquot;{queryString}&ldquot;
               </Typography>
@@ -166,13 +154,15 @@ const App = () => {
                 {apiError}
               </Typography>
             )}
-            {isFetchingImgs && <LoadingSpinner />}
-            {showGallery && <GeneratedImageList generatedImages={generatedImages} />}
+            {isLoading && <LoadingSpinner />}
+            {showResults && <GeneratedImageList generatedImages={generatedImages} />}
           </Grid>
         )}
       </Grid>
     </Container>
   );
 };
+
+App.displayName = 'App';
 
 export default memo(App);
