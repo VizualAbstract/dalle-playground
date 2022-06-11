@@ -63,22 +63,19 @@ const App = () => {
     }
   }, []);
 
-  const onError = useCallback(
-    (error: any) => {
-      setQueryTime(0);
+  const onError = useCallback((error: any) => {
+    setQueryTime(0);
 
-      window.console.log('Error querying DALL-E service.', error);
+    window.console.log('Error querying DALL-E service.', error);
 
-      if (error.message === 'Timeout') {
-        setApiError(
-          'Timeout querying DALL-E service (>1min). Consider reducing the images per query or use a stronger backend.',
-        );
-      } else {
-        setApiError('Error querying DALL-E service. Check your backend server logs.');
-      }
-    },
-    [setQueryTime, setApiError],
-  );
+    if (error.message === 'Timeout') {
+      setApiError(
+        'Timeout querying DALL-E service (>1min). Consider reducing the images per query or use a stronger backend.',
+      );
+    } else {
+      setApiError('Error querying DALL-E service. Check your backend server logs.');
+    }
+  }, []);
 
   const { isLoading, isSuccess, refetch, isError } = useQuery(
     ['DALLE', backendURL, queryString, imagesPerQuery],
