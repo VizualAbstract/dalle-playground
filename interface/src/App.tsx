@@ -12,13 +12,13 @@ import {
 } from '@material-ui/core';
 
 import { callDalleService } from 'api/backend_api';
-import BackendUrlInput from 'components/BackendUrlInput';
+import BackendUrlInput from 'components/Form/BackendUrlInput';
 import ImagesPerQuerySelect from 'components/Form/ImagesPerQuerySelect';
-import GeneratedImageList from 'components/GeneratedImageList';
+import TextPromptInput from 'components/Form/TextPromptInput';
+import GeneratedImageList from 'components/Gallery/GeneratedImageList';
+import LoadingSpinner from 'components/Gallery/LoadingSpinner';
 import Header from 'components/Layout/Header';
-import LoadingSpinner from 'components/LoadingSpinner';
 import QueryTimer from 'components/QueryTimer';
-import TextPromptInput from 'components/TextPromptInput';
 import { FormContext } from 'contexts/FormContext';
 
 const getDalle = async ({ url, query, limit }) => {
