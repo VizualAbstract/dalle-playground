@@ -41,6 +41,4 @@ const LoadingSpinner: FC = () => {
   );
 };
 
-LoadingSpinner.displayName = 'LoadingSpinner';
-
 export default memo(LoadingSpinner);

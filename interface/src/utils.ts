@@ -28,3 +28,9 @@ export const PROCESSING_STEPS = [
   "Hang tight, we're almost there",
   'Loading results, we swear!',
 ];
+
+export const COLOR_MAP = {
+  default: 'textPrimary',
+  info: 'primary',
+  error: 'error',
+};

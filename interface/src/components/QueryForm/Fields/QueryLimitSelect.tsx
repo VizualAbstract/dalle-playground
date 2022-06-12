@@ -2,15 +2,15 @@ import React, { FC, memo, useCallback, useContext } from 'react';
 
 import { FormControl, FormHelperText, InputLabel, MenuItem, Select } from '@material-ui/core';
 
-import { FormContext } from 'contexts/FormContext';
+import { QueryContext } from 'contexts/QueryContext';
 import { DEFAULT_MAX_IMAGES_PER_QUERY_OPTIONS } from 'utils';
 
 type Props = {
   isDisabled: boolean;
 };
 
-const ImagesPerQuerySelect: FC<Props> = ({ isDisabled }) => {
-  const { imagesPerQuery, setImagesPerQuery } = useContext(FormContext);
+const QueryLimitSelect: FC<Props> = ({ isDisabled }) => {
+  const { imagesPerQuery, setImagesPerQuery } = useContext(QueryContext);
 
   const options = Array.from(Array(DEFAULT_MAX_IMAGES_PER_QUERY_OPTIONS).keys());
 
@@ -46,6 +46,4 @@ const ImagesPerQuerySelect: FC<Props> = ({ isDisabled }) => {
   );
 };
 
-ImagesPerQuerySelect.displayName = 'ImagesPerQuerySelect';
-
-export default memo(ImagesPerQuerySelect);
+export default memo(QueryLimitSelect);

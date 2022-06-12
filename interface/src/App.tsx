@@ -1,25 +1,15 @@
 import React, { memo, useCallback, useContext, useState } from 'react';
 import { useQuery } from 'react-query';
 
-import {
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  Container,
-  Grid,
-  Typography,
-} from '@material-ui/core';
+import { Container, Grid } from '@material-ui/core';
 
 import { callDalleService } from 'api/backend_api';
-import BackendUrlInput from 'components/Form/BackendUrlInput';
-import ImagesPerQuerySelect from 'components/Form/ImagesPerQuerySelect';
-import TextPromptInput from 'components/Form/TextPromptInput';
-import GeneratedImageList from 'components/Gallery/GeneratedImageList';
-import LoadingSpinner from 'components/Gallery/LoadingSpinner';
+import Gallery from 'components/Gallery';
 import Header from 'components/Layout/Header';
+import MessageHandler from 'components/Layout/MessageHandler';
+import QueryForm from 'components/QueryForm';
 import QueryTimer from 'components/QueryTimer';
-import { FormContext } from 'contexts/FormContext';
+import { QueryContext } from 'contexts/QueryContext';
 
 const getDalle = async ({ url, query, limit }) => {
   const { generatedImgs } = await callDalleService(url, query, limit);
@@ -27,8 +17,7 @@ const getDalle = async ({ url, query, limit }) => {
 };
 
 const App = () => {
-  const { backendURL, queryString, validatedBackendURL, isValidURL, imagesPerQuery } =
-    useContext(FormContext);
+  const { serverURL, queryString, validatedBackendURL, imagesPerQuery } = useContext(QueryContext);
 
   // Query Timer
   const [enableTimer, setEnableTimer] = useState(false);
@@ -43,11 +32,11 @@ const App = () => {
     setEnableTimer(true);
     setApiError('');
     return getDalle({
-      url: backendURL,
+      url: serverURL,
       query: queryString,
       limit: imagesPerQuery,
     });
-  }, [backendURL, queryString, imagesPerQuery]);
+  }, [serverURL, queryString, imagesPerQuery]);
 
   const onSettled = useCallback(() => {
     setEnableTimer(false);
@@ -78,7 +67,7 @@ const App = () => {
   }, []);
 
   const { isLoading, isSuccess, refetch, isError } = useQuery(
-    ['DALLE', backendURL, queryString, imagesPerQuery],
+    ['DALLE', serverURL, queryString, imagesPerQuery],
     () => getImages,
     {
       enabled: enableQuery,
@@ -94,72 +83,28 @@ const App = () => {
     refetch();
   }, [refetch]);
 
-  const disableBackendURL = isLoading;
-  const disableQueryString = disableBackendURL || !isValidURL;
-  const disablePerQuerySelect = disableQueryString || !queryString;
-  const disableSubmit = [disableBackendURL, disableQueryString, disablePerQuerySelect].includes(
-    true,
-  );
-
   const showError = isError && !!apiError;
-  const showResults = isSuccess && generatedImages.length > 0;
-  const showGallery = !isLoading && (showError || showResults);
 
   return (
     <Container>
-      <Grid container spacing={2}>
+      <Grid container spacing={2} alignItems="center">
         <Grid item xs={12}>
           <Header />
         </Grid>
-        {!validatedBackendURL && (
-          <Grid item xs={12}>
-            <Typography variant="body1" color="textSecondary">
-              Put your DALL-E backend URL to start
-            </Typography>
-          </Grid>
-        )}
         <Grid item xs={4}>
-          <Card>
-            <CardContent>
-              <BackendUrlInput isDisabled={disableBackendURL} />
-              <TextPromptInput onEnter={handleOnEnter} isDisabled={disableQueryString} />
-              <ImagesPerQuerySelect isDisabled={disablePerQuerySelect} />
-            </CardContent>
-            <CardActions>
-              <Button
-                variant="contained"
-                onClick={handleOnEnter}
-                disabled={disableSubmit}
-                color="primary"
-                fullWidth
-              >
-                Submit
-              </Button>
-            </CardActions>
-          </Card>
+          <QueryForm isLoading={isLoading} onSubmit={handleOnEnter} />
           <QueryTimer runTimer={enableTimer} time={queryTime} />
         </Grid>
-        {showGallery && (
-          <Grid item xs={8}>
-            {showResults && (
-              <Typography variant="body1" color="textPrimary">
-                Results for: &lquot;{queryString}&ldquot;
-              </Typography>
-            )}
-            {showError && (
-              <Typography variant="h5" color="error">
-                {apiError}
-              </Typography>
-            )}
-            {isLoading && <LoadingSpinner />}
-            {showResults && <GeneratedImageList generatedImages={generatedImages} />}
-          </Grid>
-        )}
+        <Grid item xs={8}>
+          {!validatedBackendURL && (
+            <MessageHandler message="Put your DALL-E backend URL to start" />
+          )}
+          {showError && <MessageHandler type="error" variant="h6" message={apiError} />}
+          <Gallery isSuccess={isSuccess} isLoading={isLoading} generatedImages={generatedImages} />
+        </Grid>
       </Grid>
     </Container>
   );
 };
-
-App.displayName = 'App';
 
 export default memo(App);

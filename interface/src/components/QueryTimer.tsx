@@ -70,6 +70,4 @@ const QueryTimer: FC<Props> = ({ runTimer = false, time }) => {
   );
 };
 
-QueryTimer.displayName = 'QueryTimer';
-
 export default memo(QueryTimer);
