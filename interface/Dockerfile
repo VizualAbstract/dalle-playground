@@ -4,7 +4,7 @@ EXPOSE 3000
 
 COPY package.json /code/package.json
 
-COPY package-lock.json /code/package-lock.json
+COPY yarn-lock.json /code/yarn-lock.json
 
 WORKDIR /code
 
