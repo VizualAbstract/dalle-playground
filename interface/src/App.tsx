@@ -3,18 +3,13 @@ import { useQuery } from 'react-query';
 
 import { Container, Grid } from '@material-ui/core';
 
-import { callDalleService } from 'api/backend_api';
+import { fetchDalle } from 'api/dalle';
 import Gallery from 'components/Gallery';
 import Header from 'components/Layout/Header';
 import MessageHandler from 'components/Layout/MessageHandler';
 import QueryForm from 'components/QueryForm';
 import QueryTimer from 'components/QueryTimer';
 import { QueryContext } from 'contexts/QueryContext';
-
-const getDalle = async ({ url, query, limit }) => {
-  const { generatedImgs } = await callDalleService(url, query, limit);
-  return generatedImgs;
-};
 
 const App = () => {
   const { serverURL, queryString, validatedBackendURL, imagesPerQuery } = useContext(QueryContext);
@@ -28,31 +23,30 @@ const App = () => {
   const [apiError, setApiError] = useState('');
   const [generatedImages, setGeneratedImages] = useState([]);
 
-  const getImages = useCallback(() => {
+  const handleQuery = useCallback(() => {
     setEnableTimer(true);
     setApiError('');
-    return getDalle({
+
+    return fetchDalle({
       url: serverURL,
       query: queryString,
       limit: imagesPerQuery,
     });
   }, [serverURL, queryString, imagesPerQuery]);
 
-  const onSettled = useCallback(() => {
+  const handleSettled = useCallback(() => {
     setEnableTimer(false);
     setEnableQuery(false);
   }, []);
 
-  const onSuccess = useCallback((response) => {
-    if (response.ok) {
-      // Set final execution time
-      setQueryTime(response['executionTime']);
-      // Display results
-      setGeneratedImages(response['generatedImgs']);
-    }
+  const handleSuccess = useCallback((response) => {
+    // Set final execution time
+    setQueryTime(response.executionTime);
+    // Display results
+    setGeneratedImages(response.generatedImgs);
   }, []);
 
-  const onError = useCallback((error: any) => {
+  const handleError = useCallback((error: Error) => {
     setQueryTime(0);
 
     window.console.log('Error querying DALL-E service.', error);
@@ -66,15 +60,15 @@ const App = () => {
     }
   }, []);
 
-  const { isLoading, isSuccess, refetch, isError } = useQuery(
+  const { isFetching, isSuccess, refetch, isError } = useQuery(
     ['DALLE', serverURL, queryString, imagesPerQuery],
-    () => getImages,
+    () => handleQuery(),
     {
       enabled: enableQuery,
       retry: false,
-      onSettled: onSettled,
-      onSuccess: onSuccess,
-      onError: onError,
+      onSettled: handleSettled,
+      onSuccess: handleSuccess,
+      onError: handleError,
     },
   );
 
@@ -87,15 +81,15 @@ const App = () => {
 
   return (
     <Container>
-      <Grid container spacing={2} alignItems="center">
+      <Grid container spacing={2} alignItems={isFetching ? 'center' : 'flex-start'}>
         <Grid item xs={12}>
           <Header />
         </Grid>
         <Grid item xs={4}>
-          <QueryForm isLoading={isLoading} onSubmit={handleOnEnter} />
+          <QueryForm isLoading={isFetching} onSubmit={handleOnEnter} />
           <QueryTimer runTimer={enableTimer} time={queryTime} />
         </Grid>
-        <Grid item xs={8}>
+        <Grid item xs={8} justifyContent="center">
           {!validatedBackendURL && (
             <MessageHandler>Put your DALL-E backend URL to start</MessageHandler>
           )}
@@ -104,7 +98,7 @@ const App = () => {
               {apiError}
             </MessageHandler>
           )}
-          <Gallery isSuccess={isSuccess} isLoading={isLoading} generatedImages={generatedImages} />
+          <Gallery isSuccess={isSuccess} isLoading={isFetching} generatedImages={generatedImages} />
         </Grid>
       </Grid>
     </Container>

@@ -2,7 +2,7 @@ import React, { FC, memo, useCallback, useEffect, useMemo, useRef, useState } fr
 
 import { Typography } from '@material-ui/core';
 
-const useTimer = (initialTime = 0) => {
+const useTimer = (initialTime = '0') => {
   const [queryTime, setQueryTime] = useState(initialTime);
 
   const currentTime = useMemo(() => queryTime, [queryTime]);
@@ -12,15 +12,15 @@ const useTimer = (initialTime = 0) => {
   const startTimer = useCallback(() => {
     let time = 0;
     timer.current = setInterval(() => {
-      time = time + 100 / 1000;
-      setQueryTime(parseInt(time.toFixed(2)));
-    }, 100);
+      time = time + 10 / 1000;
+      setQueryTime(time.toFixed(2));
+    }, 10);
   }, [timer, setQueryTime]);
 
   const stopTimer = useCallback(
     (finalTime = 0) => {
       clearInterval(timer.current);
-      setQueryTime(finalTime);
+      setQueryTime(finalTime.toString());
     },
     [timer, setQueryTime],
   );

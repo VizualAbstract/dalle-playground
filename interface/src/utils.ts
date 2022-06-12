@@ -1,4 +1,4 @@
-export const validateURL = (str) => {
+export const validateURL = (str): boolean => {
   const pattern = new RegExp(
     '^(https?:\\/\\/)?' + // protocol
       '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
@@ -11,6 +11,14 @@ export const validateURL = (str) => {
 
   return Boolean(pattern.test(str));
 };
+
+export const validateDalleServer = (backendUrl: string): Promise<Response> =>
+  fetch(backendUrl, {
+    headers: {
+      'Bypass-Tunnel-Reminder': 'go',
+      mode: 'no-cors',
+    },
+  });
 
 export const DEFAULT_BACKEND_URL = 'http://127.0.0.1:8080';
 

@@ -14,7 +14,7 @@ const ImageList: FC<Props> = ({ generatedImages }) => {
   }
 
   return (
-    <Grid container alignItems="center" spacing={3}>
+    <Grid container spacing={3} justifyContent="center">
       {generatedImages.map((generatedImg, index) => {
         return (
           <Grid item key={index}>
