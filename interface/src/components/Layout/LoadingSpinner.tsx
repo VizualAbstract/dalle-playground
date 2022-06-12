@@ -1,9 +1,11 @@
 import React, { FC, memo, useEffect, useState } from 'react';
 import { MoonLoader } from 'react-spinners';
 
-import { Grid, Typography } from '@material-ui/core';
+import { Grid } from '@material-ui/core';
 
 import { PROCESSING_STEPS } from 'utils';
+
+import MessageHandler from './MessageHandler';
 
 const LoadingSpinner: FC = () => {
   const [processIndex, setProcessIndex] = useState(0);
@@ -35,7 +37,7 @@ const LoadingSpinner: FC = () => {
         <MoonLoader size="60" loading />
       </Grid>
       <Grid item xs={12}>
-        <Typography variant="body1">{loadingText}</Typography>
+        <MessageHandler>{loadingText}</MessageHandler>
       </Grid>
     </Grid>
   );

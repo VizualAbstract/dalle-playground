@@ -3,9 +3,8 @@ import { PulseLoader } from 'react-spinners';
 
 import { Grid, TextField } from '@material-ui/core';
 
-import { validateDalleServer } from 'api/backend_api';
 import { QueryContext } from 'contexts/QueryContext';
-import { validateURL } from 'utils';
+import { validateURL, validateDalleServer } from 'utils';
 
 type Props = {
   isDisabled: boolean;

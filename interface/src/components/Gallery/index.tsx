@@ -14,12 +14,13 @@ interface Props {
 const Gallery: FC<Props> = ({ isSuccess = false, isLoading = false, generatedImages }) => {
   const { queryString } = useContext(QueryContext);
 
-  const showResults = !isLoading && isSuccess && generatedImages.length > 0;
+  const showMessage = !isLoading && isSuccess;
+  const showResults = !isLoading && generatedImages.length > 0;
 
   return (
     <>
       {isLoading && <LoadingSpinner />}
-      {showResults && <MessageHandler>Results for: &lquot;{queryString}&ldquot;</MessageHandler>}
+      {showMessage && <MessageHandler>Results for: &ldquo;{queryString}&rdquo;</MessageHandler>}
       {showResults && <ImageList generatedImages={generatedImages} />}
     </>
   );

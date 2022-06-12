@@ -2,7 +2,15 @@ import JsonBigint from 'json-bigint';
 
 const REQUEST_TIMEOUT_SEC = 60000;
 
-export async function callDalleService(backendUrl, text, numImages) {
+export const fetchDalle = async ({
+  url: backendUrl,
+  query: text,
+  limit: numImages,
+}: {
+  url: string;
+  query: string;
+  limit: number;
+}) => {
   const queryStartTime = new Date();
   const response = await Promise.race([
     (
@@ -27,16 +35,13 @@ export async function callDalleService(backendUrl, text, numImages) {
     new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), REQUEST_TIMEOUT_SEC)),
   ]);
 
+  const executionTime = new Date();
+
   return {
-    executionTime: Math.round(((new Date() - queryStartTime) / 1000 + Number.EPSILON) * 100) / 100,
+    executionTime:
+      Math.round(
+        ((executionTime.getTime() - queryStartTime.getTime()) / 1000 + Number.EPSILON) * 100,
+      ) / 100,
     generatedImgs: JsonBigint.parse(response),
   };
-}
-
-export const validateDalleServer = (backendUrl) =>
-  fetch(backendUrl, {
-    headers: {
-      'Bypass-Tunnel-Reminder': 'go',
-      mode: 'no-cors',
-    },
-  });
+};
