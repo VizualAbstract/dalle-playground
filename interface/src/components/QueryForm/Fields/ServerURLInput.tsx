@@ -4,17 +4,17 @@ import { PulseLoader } from 'react-spinners';
 import { Grid, TextField } from '@material-ui/core';
 
 import { validateDalleServer } from 'api/backend_api';
-import { FormContext } from 'contexts/FormContext';
+import { QueryContext } from 'contexts/QueryContext';
 import { validateURL } from 'utils';
 
 type Props = {
   isDisabled: boolean;
 };
 
-const BackendUrlInput: FC<Props> = ({ isDisabled }) => {
-  const { backendURL, setBackendURL, isValidURL, setIsValidURL } = useContext(FormContext);
+const ServerURLInput: FC<Props> = ({ isDisabled }) => {
+  const { serverURL, setServerURL, isValidURL, setIsValidURL } = useContext(QueryContext);
 
-  const [inputValue, setInputValue] = useState(backendURL);
+  const [inputValue, setInputValue] = useState(serverURL);
   const [isCheckingURL, setIsCheckingURL] = useState(false);
 
   const hasError = !isValidURL && !!inputValue;
@@ -37,7 +37,7 @@ const BackendUrlInput: FC<Props> = ({ isDisabled }) => {
         }
 
         setIsValidURL(true);
-        setBackendURL(newURL);
+        setServerURL(newURL);
       } catch (err) {
         window.console.error(err);
         setIsValidURL(false);
@@ -45,17 +45,17 @@ const BackendUrlInput: FC<Props> = ({ isDisabled }) => {
         setIsCheckingURL(false);
       }
     },
-    [setIsCheckingURL, setBackendURL, setIsValidURL, setInputValue],
+    [setIsCheckingURL, setServerURL, setIsValidURL, setInputValue],
   );
 
   useEffect(() => {
-    handleOnChange(backendURL);
-  }, [handleOnChange, backendURL]);
+    handleOnChange(serverURL);
+  }, [handleOnChange, serverURL]);
 
   return (
     <TextField
       id="standard-basic"
-      label="Backend URL"
+      label="Server URL"
       value={inputValue}
       disabled={isDisabled}
       error={hasError}
@@ -73,6 +73,4 @@ const BackendUrlInput: FC<Props> = ({ isDisabled }) => {
   );
 };
 
-BackendUrlInput.displayName = 'BackendUrlInput';
-
-export default memo(BackendUrlInput);
+export default memo(ServerURLInput);

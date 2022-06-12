@@ -10,6 +10,4 @@ const Header: FC = () => {
   );
 };
 
-Header.displayName = 'Header';
-
 export default memo(Header);

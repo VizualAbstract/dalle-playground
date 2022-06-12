@@ -2,15 +2,15 @@ import React, { useCallback, useContext, FC, memo, KeyboardEvent } from 'react';
 
 import { TextField } from '@material-ui/core';
 
-import { FormContext } from 'contexts/FormContext';
+import { QueryContext } from 'contexts/QueryContext';
 
 type Props = {
   onEnter: () => void;
   isDisabled: boolean;
 };
 
-const TextPromptInput: FC<Props> = ({ onEnter, isDisabled }) => {
-  const { queryString, setQueryString } = useContext(FormContext);
+const SearchQueryInput: FC<Props> = ({ onEnter, isDisabled }) => {
+  const { queryString, setQueryString } = useContext(QueryContext);
 
   const handleOnInput = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) =>
@@ -42,6 +42,4 @@ const TextPromptInput: FC<Props> = ({ onEnter, isDisabled }) => {
   );
 };
 
-TextPromptInput.displayName = 'TextPromptInput';
-
-export default memo(TextPromptInput);
+export default memo(SearchQueryInput);

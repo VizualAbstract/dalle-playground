@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import ReactDOM from 'react-dom/client';
 
 import App from 'App';
+import { QueryContextProvider } from 'contexts/QueryContext';
 
-import { FormContextProvider } from './contexts/FormContext';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
@@ -15,9 +15,9 @@ const queryClient = new QueryClient();
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <FormContextProvider>
+      <QueryContextProvider>
         <App />
-      </FormContextProvider>
+      </QueryContextProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 );
