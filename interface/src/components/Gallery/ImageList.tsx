@@ -2,7 +2,7 @@ import React, { FC, memo } from 'react';
 
 import { Grid } from '@material-ui/core';
 
-import ImageObject from './ImageObject';
+import ImageObject from 'components/Gallery/ImageObject';
 
 interface Props {
   generatedImages: any[];

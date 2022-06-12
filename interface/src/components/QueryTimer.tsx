@@ -59,14 +59,14 @@ const QueryTimer: FC<Props> = ({ runTimer = false, time }) => {
 
   useEffect(() => setTimer(time), [time]);
 
+  if (!currentTime) {
+    return null;
+  }
+
   return (
-    <>
-      {currentTime !== 0 && (
-        <Typography variant="body2" color="textSecondary" align="center">
-          Query execution time: {currentTime} sec
-        </Typography>
-      )}
-    </>
+    <Typography variant="body2" color="textSecondary" align="center">
+      Query execution time: {currentTime} sec
+    </Typography>
   );
 };
 

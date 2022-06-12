@@ -33,4 +33,5 @@ export const COLOR_MAP = {
   default: 'textPrimary',
   info: 'primary',
   error: 'error',
+  muted: 'textSecondary',
 };

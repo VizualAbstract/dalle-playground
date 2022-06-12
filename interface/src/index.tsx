@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import ReactDOM from 'react-dom/client';
 
 import App from 'App';
+import { QueryContextProvider } from 'contexts/QueryContext';
 
-import { QueryContextProvider } from './contexts/QueryContext';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);

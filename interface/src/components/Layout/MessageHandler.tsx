@@ -6,19 +6,19 @@ import { Variant } from '@material-ui/core/styles/createTypography';
 import { COLOR_MAP } from 'utils';
 
 interface Props {
-  message?: string;
-  type?: 'default' | 'info' | 'error';
+  children?: React.ReactNode;
+  type?: 'default' | 'info' | 'error' | 'muted';
   variant?: Variant;
   align?: PropTypes.Alignment;
 }
 
 const MessageHandler: FC<Props> = ({
-  message,
+  children,
   type = 'initial',
   variant = 'body1',
   align = 'center',
 }) => {
-  if (!message) {
+  if (!children) {
     return null;
   }
 
@@ -26,7 +26,7 @@ const MessageHandler: FC<Props> = ({
 
   return (
     <Typography color={color} variant={variant} align={align}>
-      {message}
+      {children}
     </Typography>
   );
 };

@@ -19,7 +19,7 @@ const Gallery: FC<Props> = ({ isSuccess = false, isLoading = false, generatedIma
   return (
     <>
       {isLoading && <LoadingSpinner />}
-      {showResults && <MessageHandler message={`Results for: &lquot;${queryString}&ldquot;`} />}
+      {showResults && <MessageHandler>Results for: &lquot;{queryString}&ldquot;</MessageHandler>}
       {showResults && <ImageList generatedImages={generatedImages} />}
     </>
   );

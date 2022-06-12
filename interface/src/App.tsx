@@ -97,9 +97,13 @@ const App = () => {
         </Grid>
         <Grid item xs={8}>
           {!validatedBackendURL && (
-            <MessageHandler message="Put your DALL-E backend URL to start" />
+            <MessageHandler>Put your DALL-E backend URL to start</MessageHandler>
           )}
-          {showError && <MessageHandler type="error" variant="h6" message={apiError} />}
+          {showError && (
+            <MessageHandler type="error" variant="h6">
+              {apiError}
+            </MessageHandler>
+          )}
           <Gallery isSuccess={isSuccess} isLoading={isLoading} generatedImages={generatedImages} />
         </Grid>
       </Grid>
